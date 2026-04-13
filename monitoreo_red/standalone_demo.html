@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo LAN - Modo Independiente (Offline)</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        // Configuración de visualización estilo Tailwind
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: "#2563eb", accent: "#10b981", danger: "#ef4444", dark: "#0f172a", panel: "#1e293b", light: "#f8fafc" },
+                    fontFamily: { inter: ['Inter', 'sans-serif'] }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: #f8fafc;
+        }
+
+        .tab-section {
+            display: none;
+        }
+
+        .tab-section.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-item:hover,
+        .sidebar-item.active {
+            background-color: #334155;
+            color: white;
+            border-radius: 0.5rem;
+        }
+
+        /* Animaciones base y scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.4);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.4s ease forwards;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Estilos Tabla para replicar el framework */
+        table th {
+            background: #f8fafc;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 600;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        table tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Badges genéricos */
+        .badge {
+            display: inline-block;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen overflow-hidden">
+
+    <!-- =========== SIDEBAR =========== -->
+    <aside class="w-64 bg-dark text-gray-300 flex flex-col flex-shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow">
+                    <i class="fas fa-satellite-dish text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold text-white leading-tight">MonitoreoLAN</h1>
+                    <p class="text-emerald-400 text-xs font-semibold"><i class="fas fa-wifi"></i> Modo Standalone</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto mt-2">
+            <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-3">Módulos del Sistema</p>
+
+            <div class="sidebar-item active p-3 flex items-center gap-3" onclick="switchApp('app-equipos', this)">
+                <i class="fas fa-network-wired text-blue-400 w-5 text-center"></i>
+                <span class="font-medium text-sm">Equipos de Red</span>
+            </div>
+
+            <div class="sidebar-item p-3 flex items-center gap-3" onclick="switchApp('app-seguridad', this)">
+                <i class="fas fa-shield-alt text-red-500 w-5 text-center"></i>
+                <span class="font-medium text-sm">Seguridad (Firewall)</span>
+            </div>
+
+            <div class="sidebar-item p-3 flex items-center gap-3" onclick="switchApp('app-archivos', this)">
+                <i class="fas fa-folder-open text-emerald-500 w-5 text-center"></i>
+                <span class="font-medium text-sm">Archivos y FTP</span>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800 bg-gray-900 rounded-lg mx-4 mb-4 border-l-4 border-l-primary">
+            <p class="text-xs text-gray-400 mb-1"><i class="fas fa-info-circle text-primary"></i> INFO DE ENTORNO</p>
+            <p class="text-xs text-white">Este Frontend funciona 100% desconectado de la base de datos usando
+                simulaciones en memoria local.</p>
+        </div>
+    </aside>
+
+    <!-- =========== MAIN CONTENT =========== -->
+    <div class="flex-1 flex flex-col overflow-hidden bg-light">
+
+        <!-- HEADER -->
+        <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shadow-sm z-10">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900" id="header-title">Módulo Equipos de Red</h2>
+                <p class="text-sm text-gray-500" id="header-desc">Simulación offline del sistema de control del
+                    inventario de red.</p>
+            </div>
+            <div class="flex items-center gap-4 bg-gray-50 px-4 py-2 border border-gray-200 rounded-full">
+                <span class="w-2 h-2 rounded-full pulse-dot bg-emerald-500"></span>
+                <span class="text-xs font-bold text-emerald-600">OFFLINE READY</span>
+                <span id="reloj" class="text-sm font-mono text-gray-600 pl-4 border-l border-gray-300"></span>
+            </div>
+        </header>
+
+        <!-- APP CONTENT AREA -->
+        <main class="flex-1 overflow-y-auto p-8 relative">
+
+            <!-- ============================================== -->
+            <!-- VISTA 1: EQUIPOS -->
+            <!-- ============================================== -->
+            <div id="app-equipos" class="tab-section active gap-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 fade-in-up">
+                        <p class="text-gray-500 text-sm font-medium mb-1">Equipos Registrados</p>
+                        <p class="text-3xl font-bold font-mono text-gray-800" id="stat-eq-total">0</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 fade-in-up"
+                        style="animation-delay: 50ms;">
+                        <p class="text-gray-500 text-sm font-medium mb-1">Activos en LAN</p>
+                        <p class="text-3xl font-bold font-mono text-emerald-600" id="stat-eq-activos">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col mt-4">
+                    <div class="px-6 py-4 flex items-center justify-between border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-800"><i class="fas fa-desktop text-primary mr-2"></i> Listado
+                            de Dispositivos </h3>
+                        <button onclick="nuevoEquipoMock()"
+                            class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-plus"></i> Forzar Registro
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left" id="tabla-equipos">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre del Host</th>
+                                    <th>Dirección IP</th>
+                                    <th>Dirección MAC</th>
+                                    <th>Departamento</th>
+                                    <th>Estado Local</th>
+                                </tr>
+                            </thead>
+                            <tbody><!-- Llenado por JS --></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- VISTA 2: SEGURIDAD FIREWALL -->
+            <!-- ============================================== -->
+            <div id="app-seguridad" class="tab-section gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl border border-red-200 p-5 border-l-4 border-l-red-500 fade-in-up">
+                        <p class="text-red-700 text-sm font-semibold mb-1"><i class="fas fa-fire mr-1"></i> Intentos
+                            Bloqueados</p>
+                        <p class="text-3xl font-bold font-mono text-gray-800" id="stat-fw-blocks">0</p>
+                    </div>
+                    <div class="bg-white rounded-xl border border-yellow-200 p-5 border-l-4 border-l-yellow-500 fade-in-up"
+                        style="animation-delay: 50ms;">
+                        <p class="text-yellow-700 text-sm font-semibold mb-1"><i class="fas fa-bug mr-1"></i> Amenazas
+                        </p>
+                        <p class="text-3xl font-bold font-mono text-gray-800" id="stat-fw-amenazas">0</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-4">
+                    <div class="px-6 py-4 flex items-center justify-between border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-800"><i class="fas fa-list text-red-500 mr-2"></i> Firewall
+                            Logs (Generados en navegador)</h3>
+                        <button onclick="generarAtaqueSimulado()"
+                            class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition">
+                            <i class="fas fa-biohazard"></i> Simular Ataque (Block)
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left" id="tabla-firewall">
+                            <thead>
+                                <tr>
+                                    <th>Instante</th>
+                                    <th>IP Origen</th>
+                                    <th>IP Destino</th>
+                                    <th>Puerto</th>
+                                    <th>Protocolo / Motivo</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody><!-- Llenado por JS --></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================== -->
+            <!-- VISTA 3: ARCHIVOS Y FTP -->
+            <!-- ============================================== -->
+            <div id="app-archivos" class="tab-section gap-6">
+                <!-- Zona local cuaretena -->
+                <div
+                    class="bg-yellow-50 border border-yellow-300 rounded-xl p-5 mb-4 flex items-start gap-4 fade-in-up">
+                    <div class="text-yellow-700 text-2xl mt-1"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <h3 class="font-bold text-yellow-900">Hash Check Independiente Activado</h3>
+                        <p class="text-sm text-yellow-800 mt-1">Este panel no requiere base de datos. Está evaluando la
+                            información utilizando una base de datos local JSON (Memory) autogestionada para la
+                            cuarentena de archivos FTP.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-2">
+                    <div class="px-6 py-4 flex items-center justify-between border-b border-gray-200 bg-gray-50">
+                        <h3 class="font-semibold text-gray-800"><i
+                                class="fas fa-exchange-alt text-emerald-600 mr-2"></i> Transferencias FTP Simuladas</h3>
+                    </div>
+                    <div class="overflow-x-auto w-full">
+                        <table class="w-full text-left" id="tabla-ftp">
+                            <thead>
+                                <tr>
+                                    <th>Archivo</th>
+                                    <th>Tipo Ext.</th>
+                                    <th>Hash MD5 Fake</th>
+                                    <th>Dirección Tranferencia</th>
+                                    <th>Peligro Estimado</th>
+                                </tr>
+                            </thead>
+                            <tbody><!-- Llenado por JS --></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- =========== LÓGICA JAVASCRIPT OFFLINE =========== -->
+    <!-- Sin modulos import ni requerimiento de XAMPP. -->
+    <script>
+        // ----------------------------------------------------
+        // Base de Datos Estática Residente (Local Array Store)
+        // ----------------------------------------------------
+        const DataOffline = {
+            equipos: [
+                { id: 1, host: 'PC-Admin-01', ip: '192.168.1.1', mac: 'AA:BB:CC:DD:01', dpto: 'Administración', estado: 'Activo' },
+                { id: 2, host: 'SRV-Files-01', ip: '192.168.1.10', mac: 'AA:BB:CC:DD:10', dpto: 'Infraestructura', estado: 'Activo' },
+                { id: 3, host: 'PC-RRHH-01', ip: '192.168.1.50', mac: 'AA:BB:CC:DD:50', dpto: 'RRHH', estado: 'Inactivo' },
+                { id: 4, host: 'IMPRESORA-01', ip: '192.168.1.100', mac: 'AA:BB:CC:DD:C8', dpto: 'Administración', estado: 'Activo' }
+            ],
+            firewall: [
+                { id: 100, tiempo: new Date().toLocaleTimeString(), src: '192.168.1.50', dst: '8.8.8.8', port: 53, rsl: 'UDP / Consulta DNS', accion: 'ALLOW' },
+                { id: 101, tiempo: new Date().toLocaleTimeString(), src: '185.99.132.20', dst: '192.168.1.10', port: 22, rsl: 'TCP / Fuerza Bruta SSH', accion: 'BLOCK' }
+            ],
+            ftp: [
+                { file: 'reporte.pdf', ext: 'PDF', md5: 'A1B2C3D4...', org: '192.168.1.50 → SVR', riesgo: 'Limpio' },
+                { file: 'sys_patch.exe', ext: 'EXE', md5: 'DEADBEEF...', org: 'EXT(66.2.1.0) → SVR', riesgo: 'ALTO RIESGO' }
+            ]
+        };
+
+        // Utilidad rápida para dibujar tablas
+        function dibujarTabla(arr, tbodyId, configuracionDeFilaHtmlFunc) {
+            const tb = document.querySelector(`#${tbodyId} tbody`);
+            tb.innerHTML = '';
+            arr.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = configuracionDeFilaHtmlFunc(item);
+                tb.appendChild(tr);
+            });
+        }
+
+        // Render Local de Equipos
+        function renderEquipos() {
+            dibujarTabla(DataOffline.equipos, 'tabla-equipos', (e) => {
+                const bCls = e.estado === 'Activo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600';
+                return `
+                    <td class="font-bold text-gray-500">#${e.id}</td>
+                    <td class="font-medium text-gray-900">${e.host}</td>
+                    <td class="font-mono text-primary">${e.ip}</td>
+                    <td class="font-mono text-xs text-gray-500">${e.mac}</td>
+                    <td>${e.dpto}</td>
+                    <td><span class="badge ${bCls}">${e.estado}</span></td>
+                `;
+            });
+            document.getElementById('stat-eq-total').innerText = DataOffline.equipos.length;
+            document.getElementById('stat-eq-activos').innerText = DataOffline.equipos.filter(x => x.estado === 'Activo').length;
+        }
+
+        // Render Local Frontend Firewall
+        function renderFirewall() {
+            dibujarTabla(DataOffline.firewall, 'tabla-firewall', (f) => {
+                const bCls = f.accion === 'BLOCK' ? 'bg-red-500 text-white' : 'bg-emerald-100 text-emerald-800';
+                return `
+                    <td class="text-gray-400 font-mono text-xs">${f.tiempo}</td>
+                    <td class="font-mono text-red-700 font-medium">${f.src}</td>
+                    <td class="font-mono text-gray-700">${f.dst}</td>
+                    <td class="font-mono text-xs">${f.port}</td>
+                    <td class="text-xs text-gray-500 truncate max-w-[200px]">${f.rsl}</td>
+                    <td><span class="badge ${bCls}">${f.accion}</span></td>
+                `;
+            });
+            document.getElementById('stat-fw-blocks').innerText = DataOffline.firewall.filter(x => x.accion === 'BLOCK').length;
+            document.getElementById('stat-fw-amenazas').innerText = Math.floor(DataOffline.firewall.length / 2); // Simulación
+        }
+
+        // Render FTP
+        function renderFTP() {
+            dibujarTabla(DataOffline.ftp, 'tabla-ftp', (f) => {
+                const icon = f.riesgo === 'Limpio' ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-skull-crossbones text-red-600"></i> PELIGROSO';
+                return `
+                    <td class="font-medium text-gray-800">${f.file}</td>
+                    <td class="font-mono font-bold text-gray-500 text-xs">${f.ext}</td>
+                    <td class="font-mono text-xs text-gray-400">${f.md5}</td>
+                    <td class="text-sm">${f.org}</td>
+                    <td class="font-bold text-xs">${icon}</td>
+                `;
+            });
+        }
+
+        // ----------------------------------------------------
+        // Funciones Interactivas de UI
+        // ----------------------------------------------------
+
+        // Pestañas Laterales
+        function switchApp(tabID, actElem) {
+            // Eliminar clases activas del sidebar
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            actElem.classList.add('active');
+
+            // Ocultar tabs y mostrar la correcta
+            document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabID).classList.add('active');
+
+            // Set titles
+            const titles = {
+                'app-equipos': ['Módulo Equipos de Red', 'Simulación offline del sistema de control del inventario de red.'],
+                'app-seguridad': ['Seguridad Independiente', 'Análisis en memoria de logs del cortafuegos y tráfico malicioso.'],
+                'app-archivos': ['Sandbox FTP Local', 'Rastreo de envíos sin conexión al servidor central.']
+            };
+            document.getElementById('header-title').innerText = titles[tabID][0];
+            document.getElementById('header-desc').innerText = titles[tabID][1];
+        }
+
+        // Reloj
+        setInterval(() => {
+            document.getElementById('reloj').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // Simulaciones generadas por el usuario (Botones funcionales)
+        function nuevoEquipoMock() {
+            const rand = Math.floor(Math.random() * 999);
+            const equipo = {
+                id: 10 + rand,
+                host: 'DISP-GUEST-' + rand,
+                ip: `192.168.1.${Math.floor(Math.random() * 150) + 50}`,
+                mac: 'XX:XX:XX:XX:XX',
+                dpto: 'Invitado Externo',
+                estado: 'Activo'
+            };
+            DataOffline.equipos.unshift(equipo);
+            renderEquipos();
+        }
+
+        function generarAtaqueSimulado() {
+            const randIP = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.1.50`;
+            const log = {
+                id: 200 + Math.floor(Math.random() * 100),
+                tiempo: new Date().toLocaleTimeString(),
+                src: randIP,
+                dst: '192.168.1.10',
+                port: 3389,
+                rsl: 'Intento acceso RDP',
+                accion: 'BLOCK'
+            };
+            DataOffline.firewall.unshift(log); // agregar al inicio array
+            renderFirewall();
+
+            // Re-pintar la tarjeta para animación visual del rojo
+            const targetBlock = document.getElementById('stat-fw-blocks').parentElement;
+            targetBlock.classList.replace('border-red-200', 'border-red-500');
+            setTimeout(() => targetBlock.classList.replace('border-red-500', 'border-red-200'), 500);
+        }
+
+        // ----------------------------------------------------
+        // Inicializador
+        // ----------------------------------------------------
+        window.onload = () => {
+            renderEquipos();
+            renderFirewall();
+            renderFTP();
+        };
+
+    </script>
+</body>
+
+</html>

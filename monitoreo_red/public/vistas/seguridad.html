@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Módulo 2: Seguridad de red LAN — Firewall, detección de amenazas, proxy, DNS y sesión administrativa.">
+    <title>Seguridad de Red — Sistema de Monitoreo LAN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/stile.css">
+    <script src="../js/tailwind.js"></script>
+</head>
+<body class="font-inter bg-light min-h-screen">
+
+<div class="flex h-screen overflow-hidden">
+
+    <!-- ======================== SIDEBAR ======================== -->
+    <aside class="w-64 bg-dark text-white flex flex-col flex-shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow">
+                    <i class="fas fa-shield-alt text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold leading-tight">MonitoreoLAN</h1>
+                    <p class="text-gray-400 text-xs">Seguridad de Red</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <p class="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-3 px-2">Módulo 2 — Seguridad</p>
+            <a href="#" class="sidebar-link active" data-target="tab-firewall">
+                <i class="fas fa-fire"></i> Firewall / Logs
+            </a>
+            <a href="#" class="sidebar-link" data-target="tab-amenazas">
+                <i class="fas fa-bug"></i> Amenazas Detectadas
+            </a>
+            <a href="#" class="sidebar-link" data-target="tab-proxy">
+                <i class="fas fa-globe-americas"></i> Proxy & DNS
+            </a>
+            <a href="#" class="sidebar-link" data-target="tab-admin">
+                <i class="fas fa-user-shield"></i> Sesión Administrador
+            </a>
+
+            <div class="border-t border-gray-800 my-4"></div>
+            <p class="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-3 px-2">Otros Módulos</p>
+            <a href="equipos.html" class="sidebar-link">
+                <i class="fas fa-network-wired"></i> Conectar Equipos
+            </a>
+            <a href="monitoreo_archivos.html" class="sidebar-link">
+                <i class="fas fa-folder-open"></i> Monitoreo de Archivos
+            </a>
+        </nav>
+
+        <!-- Alerta de seguridad en el sidebar -->
+        <div id="sidebar-alerta" class="mx-4 mb-4 p-3 bg-red-900 border border-red-700 rounded-lg hidden">
+            <p class="text-xs text-red-300 font-semibold flex items-center gap-1">
+                <i class="fas fa-exclamation-circle"></i> Amenazas activas
+            </p>
+            <p class="text-2xl font-bold text-white mt-1" id="sidebar-amenazas-count">0</p>
+        </div>
+
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-sm font-bold">
+                    <i class="fas fa-user-shield text-xs"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium">Administrador</p>
+                    <p class="text-gray-400 text-xs">Acceso total</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ======================== MAIN ======================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- HEADER -->
+        <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900" id="page-title">Firewall / Logs</h2>
+                <p class="text-sm text-gray-500" id="page-subtitle">Tráfico entrante y saliente controlado por el firewall</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="live-indicator">PROTECCIÓN ACTIVA</span>
+                <span id="reloj" class="text-sm font-mono text-gray-600"></span>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-8">
+
+            <!-- PESTAÑAS -->
+            <div class="flex gap-2 mb-6 border-b border-gray-200">
+                <button class="tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 border-primary bg-primary text-white" data-target="tab-firewall">
+                    <i class="fas fa-fire mr-2"></i>Firewall
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg border border-gray-200 bg-white text-gray-600" data-target="tab-amenazas">
+                    <i class="fas fa-bug mr-2"></i>Amenazas
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg border border-gray-200 bg-white text-gray-600" data-target="tab-proxy">
+                    <i class="fas fa-globe-americas mr-2"></i>Proxy & DNS
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg border border-gray-200 bg-white text-gray-600" data-target="tab-admin">
+                    <i class="fas fa-user-shield mr-2"></i>Administrador
+                </button>
+            </div>
+
+            <!-- ======= TAB 1: FIREWALL ======= -->
+            <div id="tab-firewall" class="tab-section flex flex-col gap-6">
+                <!-- Estadísticas del firewall -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="stat-card fade-in-up">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Total Eventos</p>
+                            <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-list text-gray-500 text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900" id="fw-total">0</p>
+                        <p class="text-xs text-gray-400 mt-1">registros del firewall</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:50ms">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Permitidos</p>
+                            <div class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-accent text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-green-600" id="fw-allow">0</p>
+                        <p class="text-xs text-gray-400 mt-1">conexiones ALLOW</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:100ms">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Bloqueados</p>
+                            <div class="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-ban text-danger text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-red-600" id="fw-block">0</p>
+                        <p class="text-xs text-gray-400 mt-1">conexiones BLOCK/DROP</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:150ms">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Tráfico Entrada</p>
+                            <div class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-arrow-down text-primary text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-primary" id="fw-in">0</p>
+                        <p class="text-xs text-gray-400 mt-1">eventos entrantes</p>
+                    </div>
+                </div>
+
+                <!-- Tabla logs firewall -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Registros del Firewall</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Tráfico de red controlado — entrada y salida</p>
+                        </div>
+                        <button id="btn-nuevo-log" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Nuevo Registro
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>IP Origen</th>
+                                    <th>IP Destino</th>
+                                    <th>Puerto</th>
+                                    <th>Protocolo</th>
+                                    <th>Acción</th>
+                                    <th>Dirección</th>
+                                    <th>Motivo</th>
+                                    <th>Fecha</th>
+                                    <th class="text-right">Acc.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-firewall"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Formulario nuevo log -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-900">Registrar Evento de Firewall</h3>
+                    </div>
+                    <form id="form-firewall" class="p-6 grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">IP Origen *</label>
+                            <input type="text" name="IP_Origen" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="Ej: 192.168.1.50" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">IP Destino *</label>
+                            <input type="text" name="IP_Destino" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="Ej: 8.8.8.8" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Puerto</label>
+                            <input type="number" name="Puerto" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="443">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Protocolo</label>
+                            <select name="Protocolo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition">
+                                <option value="TCP">TCP</option>
+                                <option value="UDP">UDP</option>
+                                <option value="ICMP">ICMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Acción</label>
+                            <select name="Accion" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition">
+                                <option value="ALLOW">ALLOW</option>
+                                <option value="BLOCK">BLOCK</option>
+                                <option value="DROP">DROP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                            <select name="Direccion" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition">
+                                <option value="IN">IN (Entrante)</option>
+                                <option value="OUT">OUT (Saliente)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Motivo / Descripción</label>
+                            <input type="text" name="Motivo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="Describir la razón de la acción...">
+                        </div>
+                        <div class="md:col-span-3 flex justify-end gap-3 pt-2 border-t border-gray-100">
+                            <button type="reset" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition">Limpiar</button>
+                            <button type="submit" class="px-5 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                                <i class="fas fa-save"></i> Registrar Evento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ======= TAB 2: AMENAZAS ======= -->
+            <div id="tab-amenazas" class="tab-section hidden flex-col gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="stat-card fade-in-up border-l-4 border-red-500">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Amenazas Críticas</p>
+                        <p class="text-3xl font-bold text-red-600" id="am-critica">0</p>
+                    </div>
+                    <div class="stat-card fade-in-up border-l-4 border-orange-400" style="animation-delay:50ms">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Amenazas Altas</p>
+                        <p class="text-3xl font-bold text-orange-500" id="am-alta">0</p>
+                    </div>
+                    <div class="stat-card fade-in-up border-l-4 border-yellow-400" style="animation-delay:100ms">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Amenazas Medias</p>
+                        <p class="text-3xl font-bold text-yellow-600" id="am-media">0</p>
+                    </div>
+                    <div class="stat-card fade-in-up border-l-4 border-green-400" style="animation-delay:150ms">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Mitigadas</p>
+                        <p class="text-3xl font-bold text-green-600" id="am-mitigada">0</p>
+                    </div>
+                </div>
+
+                <!-- Tabla amenazas -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Amenazas y Eventos de Seguridad</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Intrusiones, malware y ataques detectados</p>
+                        </div>
+                        <button id="btn-nueva-amenaza" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Registrar Amenaza
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>IP Origen</th>
+                                    <th>Tipo</th>
+                                    <th>Severidad</th>
+                                    <th>Descripción</th>
+                                    <th>Estado</th>
+                                    <th>Fecha</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-amenazas"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Formulario registrar amenaza -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-900">Registrar Nueva Amenaza</h3>
+                    </div>
+                    <form id="form-amenazas" class="p-6 grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">IP de Origen</label>
+                            <input type="text" name="IP_Origen" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="IP del atacante">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Amenaza *</label>
+                            <select name="Tipo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" required>
+                                <option value="Malware">Malware</option>
+                                <option value="Intrusion">Intrusión</option>
+                                <option value="PortScan">Port Scan</option>
+                                <option value="BruteForce">Fuerza Bruta</option>
+                                <option value="DDoS">DDoS</option>
+                                <option value="Phishing">Phishing</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Severidad *</label>
+                            <select name="Severidad" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" required>
+                                <option value="Baja">Baja</option>
+                                <option value="Media">Media</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Crítica">Crítica</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <select name="Estado" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition">
+                                <option value="Activa">Activa</option>
+                                <option value="Mitigada">Mitigada</option>
+                                <option value="Ignorada">Ignorada</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción Detallada</label>
+                            <textarea name="Descripcion" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="Detalles del evento de seguridad detectado..."></textarea>
+                        </div>
+                        <div class="md:col-span-2 flex justify-end gap-3 pt-2 border-t border-gray-100">
+                            <button type="reset" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition">Limpiar</button>
+                            <button type="submit" class="px-5 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                                <i class="fas fa-exclamation-triangle"></i> Registrar Amenaza
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ======= TAB 3: PROXY & DNS ======= -->
+            <div id="tab-proxy" class="tab-section hidden flex-col gap-6">
+                <!-- Info general proxy -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-server text-red-600"></i> Configuración del Proxy
+                        </h3>
+                        <dl class="space-y-3">
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">IP del Proxy</dt>
+                                <dd class="text-sm font-mono font-semibold text-gray-800">192.168.1.1:3128</dd>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">Tipo</dt>
+                                <dd class="text-sm font-semibold text-gray-800">Squid Proxy (Transparente)</dd>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">Filtrado de contenido</dt>
+                                <dd class="text-sm font-semibold text-green-600">Activo</dd>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">Inspección SSL</dt>
+                                <dd class="text-sm font-semibold text-green-600">Habilitado</dd>
+                            </div>
+                            <div class="flex justify-between py-2">
+                                <dt class="text-sm text-gray-500">DNS con Traducción</dt>
+                                <dd class="text-sm font-mono font-semibold text-gray-800">Pi-hole 192.168.1.5</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-bar text-red-600"></i> Resumen de Reglas
+                        </h3>
+                        <div class="space-y-4" id="proxy-resumen">
+                            <div class="text-center text-gray-400 py-8">
+                                <i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>
+                                Cargando estadísticas...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla reglas proxy -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Reglas de Filtrado Proxy / DNS</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Dominios permitidos y bloqueados en la red</p>
+                        </div>
+                        <button id="btn-nueva-regla" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Nueva Regla
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Dominio</th>
+                                    <th>Acción</th>
+                                    <th>Categoría</th>
+                                    <th>Estado</th>
+                                    <th>Creación</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-proxy"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Formulario nueva regla proxy -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-900">Agregar Regla de Filtrado</h3>
+                    </div>
+                    <form id="form-proxy" class="p-6 grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dominio *</label>
+                            <input type="text" name="Dominio" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" placeholder="Ej: ejemplo.com" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Acción *</label>
+                            <select name="Accion" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition" required>
+                                <option value="BLOCK">BLOCK (Bloquear)</option>
+                                <option value="ALLOW">ALLOW (Permitir)</option>
+                                <option value="REDIRECT">REDIRECT (Redirigir)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+                            <select name="Categoria" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition">
+                                <option value="Malware">Malware</option>
+                                <option value="Adultos">Contenido Adultos</option>
+                                <option value="Redes_Sociales">Redes Sociales</option>
+                                <option value="Entretenimiento">Entretenimiento</option>
+                                <option value="Motor_Busqueda">Motor de Búsqueda</option>
+                                <option value="Seguridad">Seguridad</option>
+                                <option value="Educacion">Educación</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <select name="Activa" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 transition">
+                                <option value="1">Activa</option>
+                                <option value="0">Inactiva</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 flex justify-end gap-3 pt-2 border-t border-gray-100">
+                            <button type="reset" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition">Limpiar</button>
+                            <button type="submit" class="px-5 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                                <i class="fas fa-save"></i> Guardar Regla
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ======= TAB 4: SESIÓN ADMINISTRADOR ======= -->
+            <div id="tab-admin" class="tab-section hidden flex-col gap-6">
+                <!-- Panel de acceso de administrador -->
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="md:col-span-1">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                            <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-user-shield text-red-600"></i> Panel de Acceso
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-lock-open text-green-600 text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-semibold text-green-800">Sesión Activa</p>
+                                        <p class="text-xs text-green-600">Administrador Principal</p>
+                                    </div>
+                                </div>
+                                <dl class="space-y-2 pt-2">
+                                    <div class="flex justify-between text-sm py-1 border-b border-gray-100">
+                                        <dt class="text-gray-500">Cargo</dt>
+                                        <dd class="font-medium text-gray-800">Administrador</dd>
+                                    </div>
+                                    <div class="flex justify-between text-sm py-1 border-b border-gray-100">
+                                        <dt class="text-gray-500">IP de Acceso</dt>
+                                        <dd class="font-mono text-gray-800">192.168.1.1</dd>
+                                    </div>
+                                    <div class="flex justify-between text-sm py-1 border-b border-gray-100">
+                                        <dt class="text-gray-500">Permisos</dt>
+                                        <dd class="font-medium text-red-600">Total</dd>
+                                    </div>
+                                    <div class="flex justify-between text-sm py-1">
+                                        <dt class="text-gray-500">Acceso módulos</dt>
+                                        <dd class="text-gray-800">3 / 3</dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                            <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="fas fa-users text-red-600"></i> Usuarios del Sistema
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cédula</th>
+                                            <th>Nombre</th>
+                                            <th>Email</th>
+                                            <th>Cargo</th>
+                                            <th>Estado</th>
+                                            <th>Último Login</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbody-usuarios"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de sesiones -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Historial de Sesiones</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Registro de accesos administrativos al sistema</p>
+                        </div>
+                        <button id="btn-nueva-sesion" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                            <i class="fas fa-sign-in-alt"></i> Registrar Sesión
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cédula</th>
+                                    <th>IP de Acceso</th>
+                                    <th>Inicio</th>
+                                    <th>Fin</th>
+                                    <th>Estado</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-sesiones"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- =========================== SCRIPT =========================== -->
+<script type="module">
+import { NetworkService } from '../js/NetworkService.js';
+import { RenderTabla }    from '../js/RenderTabla.js';
+import { TabManager }     from '../js/TabManager.js';
+
+const API_URL = 'http://localhost/monitoreo_red/api/network_manager.php';
+const api     = new NetworkService(API_URL);
+
+// Reloj
+setInterval(() => {
+    document.getElementById('reloj').textContent = new Date().toLocaleTimeString('es-VE', { hour12: false });
+}, 1000);
+
+// Badges
+const accionBadge   = { 'ALLOW': 'badge-limpio', 'BLOCK': 'badge-bloqueado', 'DROP': 'badge-falla' };
+const sevBadge      = { 'Baja': 'badge-baja', 'Media': 'badge-media', 'Alta': 'badge-alta', 'Crítica': 'badge-critica' };
+const estAmenaza    = { 'Activa': 'badge-falla', 'Mitigada': 'badge-limpio', 'Ignorada': 'badge-inactivo' };
+const dirBadge      = { 'IN': 'bg-blue-100 text-blue-800', 'OUT': 'bg-purple-100 text-purple-800' };
+const activaBadge   = { '1': 'badge-activo', '0': 'badge-inactivo' };
+
+new TabManager();
+
+// Sidebar navigation
+document.querySelectorAll('.sidebar-link[data-target]').forEach(link => {
+    link.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            if (btn.dataset.target === link.dataset.target) btn.click();
+        });
+    });
+});
+
+// ============================================================
+// FIREWALL
+// ============================================================
+const tablaFirewall = new RenderTabla('tbody-firewall', {
+    idField: 'ID_Log',
+    columns: [
+        { field: 'IP_Origen',  className: 'font-mono text-xs text-gray-700' },
+        { field: 'IP_Destino', className: 'font-mono text-xs text-gray-700' },
+        { field: 'Puerto',     className: 'font-mono' },
+        { field: 'Protocolo' },
+        { field: 'Accion',    badge: accionBadge },
+        { field: 'Direccion', badge: dirBadge },
+        { field: 'Motivo',    className: 'text-xs text-gray-500 max-w-xs truncate' },
+        { field: 'Fecha',     className: 'text-xs text-gray-400' }
+    ],
+    onDelete: async id => { if(confirm(`¿Eliminar log #${id}?`)) { await api.delete('firewall_logs', id); cargarFirewall(); } }
+});
+
+async function cargarFirewall() {
+    const datos = await api.getAll('firewall_logs');
+    tablaFirewall.render(datos);
+    document.getElementById('fw-total').textContent = datos.length;
+    document.getElementById('fw-allow').textContent = datos.filter(d => d.Accion === 'ALLOW').length;
+    document.getElementById('fw-block').textContent = datos.filter(d => d.Accion !== 'ALLOW').length;
+    document.getElementById('fw-in').textContent    = datos.filter(d => d.Direccion === 'IN').length;
+}
+
+document.getElementById('form-firewall').addEventListener('submit', async e => {
+    e.preventDefault();
+    await api.create('firewall_logs', Object.fromEntries(new FormData(e.target)));
+    alert('Evento de firewall registrado.'); e.target.reset(); cargarFirewall();
+});
+
+// ============================================================
+// AMENAZAS
+// ============================================================
+const tablaAmenazas = new RenderTabla('tbody-amenazas', {
+    idField: 'ID_Amenaza',
+    columns: [
+        { field: 'IP_Origen',   className: 'font-mono text-xs text-gray-700' },
+        { field: 'Tipo',        className: 'font-medium text-gray-900' },
+        { field: 'Severidad',   badge: sevBadge },
+        { field: 'Descripcion', className: 'text-xs text-gray-500 max-w-xs truncate' },
+        { field: 'Estado',      badge: estAmenaza },
+        { field: 'Fecha',       className: 'text-xs text-gray-400' }
+    ],
+    onDelete: async id => { if(confirm(`¿Eliminar amenaza #${id}?`)) { await api.delete('amenazas', id); cargarAmenazas(); } }
+});
+
+async function cargarAmenazas() {
+    const datos = await api.getAll('amenazas');
+    tablaAmenazas.render(datos);
+    document.getElementById('am-critica').textContent  = datos.filter(d => d.Severidad === 'Crítica').length;
+    document.getElementById('am-alta').textContent     = datos.filter(d => d.Severidad === 'Alta').length;
+    document.getElementById('am-media').textContent    = datos.filter(d => d.Severidad === 'Media').length;
+    document.getElementById('am-mitigada').textContent = datos.filter(d => d.Estado === 'Mitigada').length;
+    // Alerta sidebar
+    const activas = datos.filter(d => d.Estado === 'Activa').length;
+    const alertEl = document.getElementById('sidebar-alerta');
+    if (activas > 0) {
+        alertEl.classList.remove('hidden');
+        document.getElementById('sidebar-amenazas-count').textContent = activas;
+    }
+}
+
+document.getElementById('form-amenazas').addEventListener('submit', async e => {
+    e.preventDefault();
+    await api.create('amenazas', Object.fromEntries(new FormData(e.target)));
+    alert('Amenaza registrada.'); e.target.reset(); cargarAmenazas();
+});
+
+// ============================================================
+// PROXY
+// ============================================================
+const tablaProxy = new RenderTabla('tbody-proxy', {
+    idField: 'ID_Regla',
+    columns: [
+        { field: 'Dominio',         className: 'font-mono font-medium text-gray-900' },
+        { field: 'Accion',          badge: accionBadge },
+        { field: 'Categoria',       className: 'text-xs text-gray-600' },
+        { field: 'Activa',          badge: activaBadge },
+        { field: 'Fecha_Creacion',  className: 'text-xs text-gray-400' }
+    ],
+    onDelete: async id => { if(confirm(`¿Eliminar regla #${id}?`)) { await api.delete('reglas_proxy', id); cargarProxy(); } }
+});
+
+async function cargarProxy() {
+    const datos = await api.getAll('reglas_proxy');
+    tablaProxy.render(datos);
+    // resumen
+    const bloqueados = datos.filter(d => d.Accion === 'BLOCK').length;
+    const permitidos = datos.filter(d => d.Accion === 'ALLOW').length;
+    const activas    = datos.filter(d => d.Activa == 1).length;
+    const resumen    = document.getElementById('proxy-resumen');
+    const bars = [
+        ['Reglas BLOCK', bloqueados, datos.length, 'bg-red-500'],
+        ['Reglas ALLOW', permitidos, datos.length, 'bg-green-500'],
+        ['Reglas Activas', activas, datos.length, 'bg-blue-500']
+    ];
+    resumen.innerHTML = bars.map(([label, val, total, cls]) => {
+        const pct = total ? Math.round((val / total) * 100) : 0;
+        return `<div class="space-y-1">
+            <div class="flex justify-between text-sm">
+                <span class="text-gray-600">${label}</span>
+                <span class="font-semibold">${val} (${pct}%)</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2">
+                <div class="${cls} h-2 rounded-full" style="width:${pct}%"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+document.getElementById('form-proxy').addEventListener('submit', async e => {
+    e.preventDefault();
+    await api.create('reglas_proxy', Object.fromEntries(new FormData(e.target)));
+    alert('Regla registrada.'); e.target.reset(); cargarProxy();
+});
+
+// ============================================================
+// USUARIOS & SESIONES
+// ============================================================
+const tablaUsuarios = new RenderTabla('tbody-usuarios', {
+    idField: 'Cedula',
+    acciones: false,
+    columns: [
+        { field: 'Nombre',     className: 'font-medium text-gray-900' },
+        { field: 'Email',      className: 'font-mono text-xs text-gray-600' },
+        { field: 'Cargo' },
+        { field: 'Is_Active',  badge: { '1': 'badge-activo', '0': 'badge-inactivo' } },
+        { field: 'Last_Login', className: 'text-xs text-gray-400' }
+    ]
+});
+
+const tablaSesiones = new RenderTabla('tbody-sesiones', {
+    idField: 'ID_Sesion',
+    columns: [
+        { field: 'Cedula',     className: 'font-mono' },
+        { field: 'IP_Acceso',  className: 'font-mono text-xs text-gray-600' },
+        { field: 'Inicio',     className: 'text-xs text-gray-600' },
+        { field: 'Fin',        className: 'text-xs text-gray-400' },
+        { field: 'Activa',     badge: { '1': 'badge-activo', '0': 'badge-inactivo' } }
+    ],
+    onDelete: async id => { if(confirm(`¿Cerrar sesión #${id}?`)) { await api.delete('sesiones_admin', id); cargarSesiones(); } }
+});
+
+async function cargarUsuarios()  { tablaUsuarios.render(await api.getAll('usuarios')); }
+async function cargarSesiones()  { tablaSesiones.render(await api.getAll('sesiones_admin')); }
+
+document.getElementById('btn-nueva-sesion').addEventListener('click', async () => {
+    const cedula = prompt('Cédula del administrador:');
+    if (!cedula) return;
+    const ip = prompt('IP de acceso:', '192.168.1.1');
+    await api.create('sesiones_admin', { Cedula: cedula, IP_Acceso: ip, Activa: 1 });
+    cargarSesiones();
+});
+
+// Init
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await cargarFirewall();
+        await cargarAmenazas();
+        await cargarProxy();
+        await cargarUsuarios();
+        await cargarSesiones();
+    } catch(err) { console.error('Error Módulo 2:', err); }
+});
+</script>
+
+</body>
+</html>

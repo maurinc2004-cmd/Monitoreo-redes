@@ -1,0 +1,22 @@
+
+[
+    {
+        "N_Serial": "SN-2024-99",
+        "ID_Modelo": 1,
+        "Estado": "Disponible",
+        "Nombre": "Laptop Dell Latitude",
+        "Fecha_compra": "2024-05-20",
+        "Garantia": "2024-05-25",
+        "Modificado": false,
+        "Observaciones": "Equipo nuevo para el área de ventas"
+    },
+
+    {
+        "Marca": "Dell",
+        "Modelo": "Latitude 5420",
+        "Categoria": "Laptop",
+        "Fecha_produccion": "2024-01-15",
+        "Fin_soporte": "2027-01-15",
+        "Especificaciones": "Intel Core i7, 16GB RAM, 512GB SSD"
+    }
+]

@@ -1,0 +1,14 @@
+/* Estilos base si fueran necesarios fuera de Tailwind */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Puedes agregar aquí transiciones personalizadas o estilos de scroll */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 10px;
+}

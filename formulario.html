@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <base target="_self">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuevo Modelo - Sistema de Inventario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#2563eb",
+                        secondary: "#475569",
+                        accent: "#0ea5e9",
+                        success: "#10b981",
+                        warning: "#f59e0b",
+                        danger: "#ef4444",
+                        dark: "#1e293b"
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .input-error {
+            border-color: #ef4444;
+        }
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .success-message {
+            background-color: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans">
+
+        <!-- Formulario -->
+        <div class="bg-white rounded-xl shadow form-container">
+            <div class="px-8 py-6 border-b">
+                <h3 class="text-lg font-semibold text-dark">Información del Modelo</h3>
+                <p class="text-sm text-secondary mt-1">Complete todos los campos obligatorios (*)</p>
+            </div>
+            
+            <form id="formNuevoModelo" class="p-8 space-y-6">
+                <!-- Datos del formulario -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Nombre del Modelo -->
+                    <div>
+                        <label for="nombreModelo" class="block text-sm font-medium text-secondary mb-2">
+                            Nombre del Modelo *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="nombreModelo" 
+                            name="nombreModelo"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                            placeholder="Ej: Dell PowerEdge R740"
+                            required
+                        >
+                        <div id="errorNombre" class="error-message"></div>
+                    </div>
+
+                    <!-- Tipo de Activo -->
+                    <div>
+                        <label for="tipoActivo" class="block text-sm font-medium text-secondary mb-2">
+                            Tipo de Activo *
+                        </label>
+                        <select 
+                            id="tipoActivo" 
+                            name="tipoActivo"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                            required
+                        >
+                            <option value="">Seleccione un tipo</option>
+                        </select>
+                        <div id="errorTipo" class="error-message"></div>
+                    </div>
+
+                    <!-- Modelo -->
+                    <div>
+                        <label for="modelo" class="block text-sm font-medium text-secondary mb-2">
+                            Modelo *
+                        </label>
+                        <input 
+                            type="text" 
+                            id="modelo" 
+                            name="modelo"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                            placeholder="Ej: R740, ISR 4451, FG-100F"
+                            required
+                        >
+                        <div id="errorModelo" class="error-message"></div>
+                    </div>
+
+                    <!-- Categoría -->
+                    <div>
+                        <label for="categoria" class="block text-sm font-medium text-secondary mb-2">
+                            Categoría *
+                        </label>
+                        <select 
+                            id="categoria" 
+                            name="categoria"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                            required
+                        >
+                            <option value="">Seleccione una categoría</option>
+                        </select>
+                        <div id="errorCategoria" class="error-message"></div>
+                    </div>
+
+                    <!-- Fabricante -->
+                    <div>
+                        <label for="fabricante" class="block text-sm font-medium text-secondary mb-2">
+                            Fabricante *
+                        </label>
+                        <select 
+                            id="fabricante" 
+                            name="fabricante"
+                            class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                            required
+                        >
+                            <option value="">Seleccione un fabricante</option>
+                        </select>
+                        <div id="errorFabricante" class="error-message"></div>
+                    </div>
+                </div>
+
+                <!-- Especificaciones -->
+                <div>
+                    <label for="especificaciones" class="block text-sm font-medium text-secondary mb-2">
+                        Especificaciones Técnicas *
+                    </label>
+                    <textarea 
+                        id="especificaciones" 
+                        name="especificaciones"
+                        rows="4"
+                        class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                        placeholder="Ej: 2x Xeon Gold, 256GB RAM, 8x 1TB SSD, 10Gbps throughput..."
+                        required
+                    ></textarea>
+                    <div id="errorEspecificaciones" class="error-message"></div>
+                    <p class="text-xs text-gray-500 mt-2">Describa las características técnicas principales del modelo</p>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4 pt-6 border-t">
+                    <button 
+                        type="button" 
+                        id="btnCancelar"
+                        class="px-6 py-3 border border-gray-300 text-secondary rounded-lg hover:bg-gray-50 transition"
+                    >
+                        Cancelar
+                    </button>
+                    <button 
+                        type="button" 
+                        id="btnGuardarBorrador"
+                        class="px-6 py-3 border border-primary text-primary rounded-lg hover:bg-primary/5 transition"
+                    >
+                        Guardar como Borrador
+                    </button>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition flex items-center justify-center space-x-2"
+                    >
+                        <i class="fas fa-save"></i>
+                        <span>Guardar Modelo</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

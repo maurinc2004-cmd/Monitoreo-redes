@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Módulo 1: Gestión de equipos conectados, información de red y registro de transmisiones en la LAN.">
+    <title>Conectar Equipos — Sistema de Monitoreo LAN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/stile.css">
+    <script src="../js/tailwind.js"></script>
+</head>
+<body class="font-inter bg-light min-h-screen">
+
+<div class="flex h-screen overflow-hidden">
+
+    <!-- ======================== SIDEBAR ======================== -->
+    <aside class="w-64 bg-dark text-white flex flex-col flex-shrink-0">
+        <div class="p-6 border-b border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow">
+                    <i class="fas fa-network-wired text-white text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-base font-bold leading-tight">MonitoreoLAN</h1>
+                    <p class="text-gray-400 text-xs">v1.0 — MN 1001</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+            <p class="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-3 px-2">Módulo 1</p>
+            <a href="#" class="sidebar-link active" data-target="tab-equipos" id="nav-equipos">
+                <i class="fas fa-desktop"></i> Equipos Conectados
+            </a>
+            <a href="#" class="sidebar-link" data-target="tab-info" id="nav-info">
+                <i class="fas fa-info-circle"></i> Información de Red
+            </a>
+            <a href="#" class="sidebar-link" data-target="tab-organizacion" id="nav-org">
+                <i class="fas fa-sitemap"></i> Organización
+            </a>
+            <a href="#" class="sidebar-link" data-target="tab-transmisiones" id="nav-trans">
+                <i class="fas fa-exchange-alt"></i> Transmisiones
+            </a>
+
+            <div class="border-t border-gray-800 my-4"></div>
+            <p class="text-gray-500 text-xs font-semibold uppercase tracking-widest mb-3 px-2">Otros Módulos</p>
+            <a href="seguridad.html" class="sidebar-link">
+                <i class="fas fa-shield-alt"></i> Seguridad de Red
+            </a>
+            <a href="monitoreo_archivos.html" class="sidebar-link">
+                <i class="fas fa-folder-open"></i> Monitoreo de Archivos
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-sm font-bold">A</div>
+                <div>
+                    <p class="text-sm font-medium">Administrador</p>
+                    <p class="text-gray-400 text-xs">admin@red.local</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ======================== MAIN ======================== -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+        <!-- HEADER -->
+        <header class="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900" id="page-title">Equipos Conectados</h2>
+                <p class="text-sm text-gray-500" id="page-subtitle">Gestión de equipos conectados a la red LAN</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="live-indicator">EN VIVO</span>
+                <span id="reloj" class="text-sm font-mono text-gray-600"></span>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="flex-1 overflow-y-auto p-8">
+
+            <!-- ======= PESTAÑAS DE NAVEGACIÓN ======= -->
+            <div class="flex gap-2 mb-6 border-b border-gray-200 pb-0">
+                <button class="tab-btn active px-4 py-2 text-sm font-medium rounded-t-lg border border-b-0 border-primary bg-primary text-white" data-target="tab-equipos">
+                    <i class="fas fa-desktop mr-2"></i>Equipos
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg border border-gray-200 bg-white text-gray-600" data-target="tab-info">
+                    <i class="fas fa-info-circle mr-2"></i>Información
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg border border-gray-200 bg-white text-gray-600" data-target="tab-organizacion">
+                    <i class="fas fa-sitemap mr-2"></i>Organización
+                </button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium rounded-t-lg border border-gray-200 bg-white text-gray-600" data-target="tab-transmisiones">
+                    <i class="fas fa-exchange-alt mr-2"></i>Transmisiones
+                </button>
+            </div>
+
+            <!-- ======= TAB 1: EQUIPOS CONECTADOS ======= -->
+            <div id="tab-equipos" class="tab-section flex flex-col gap-6">
+                <!-- Estadísticas -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="stat-card fade-in-up">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Total Equipos</p>
+                            <div class="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-desktop text-primary text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-900" id="stat-total">0</p>
+                        <p class="text-xs text-gray-400 mt-1">registrados en la LAN</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:50ms">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Activos</p>
+                            <div class="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-accent text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-green-600" id="stat-activos">0</p>
+                        <p class="text-xs text-gray-400 mt-1">conectados ahora</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:100ms">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">Inactivos</p>
+                            <div class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-power-off text-gray-400 text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-gray-500" id="stat-inactivos">0</p>
+                        <p class="text-xs text-gray-400 mt-1">sin conexión</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:150ms">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-sm text-gray-500 font-medium">En Falla</p>
+                            <div class="w-9 h-9 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-danger text-sm"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-red-600" id="stat-fallas">0</p>
+                        <p class="text-xs text-gray-400 mt-1">requieren atención</p>
+                    </div>
+                </div>
+
+                <!-- Tabla Equipos -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Dispositivos en la red LAN</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Todos los equipos registrados y sus estados</p>
+                        </div>
+                        <button id="btn-nuevo-equipo" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Nuevo Equipo
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>IP</th>
+                                    <th>MAC</th>
+                                    <th>Tipo</th>
+                                    <th>S.O.</th>
+                                    <th>Departamento</th>
+                                    <th>Estado</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-equipos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= TAB 2: INFORMACIÓN DE RED ======= -->
+            <div id="tab-info" class="tab-section hidden flex-col gap-6">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Info del host local -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-server text-primary"></i> Información del Servidor LAN
+                        </h3>
+                        <dl class="space-y-3">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">Red/Subred</dt>
+                                <dd class="text-sm font-semibold text-gray-800">192.168.1.0/24</dd>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">Gateway</dt>
+                                <dd class="text-sm font-semibold text-gray-800">192.168.1.254</dd>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">DNS Primario</dt>
+                                <dd class="text-sm font-semibold text-gray-800">8.8.8.8 (Google)</dd>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">DNS Secundario</dt>
+                                <dd class="text-sm font-semibold text-gray-800">1.1.1.1 (Cloudflare)</dd>
+                            </div>
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                <dt class="text-sm text-gray-500">Servidor DHCP</dt>
+                                <dd class="text-sm font-semibold text-gray-800">192.168.1.254</dd>
+                            </div>
+                            <div class="flex justify-between items-center py-2">
+                                <dt class="text-sm text-gray-500">Rango DHCP</dt>
+                                <dd class="text-sm font-semibold text-gray-800">192.168.1.50 – 192.168.1.200</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <!-- Gráfico de distribución por tipo -->
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-primary"></i> Distribución por Tipo
+                        </h3>
+                        <div id="chart-tipos" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Tabla de categorías -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <h3 class="font-semibold text-gray-900">Categorías de Equipos</h3>
+                        <button id="btn-nueva-categoria" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Nueva Categoría
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-categorias"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ======= TAB 3: ORGANIZACIÓN ======= -->
+            <div id="tab-organizacion" class="tab-section hidden flex-col gap-6">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 class="font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fas fa-sitemap text-primary"></i> Organización por Departamento
+                    </h3>
+                    <div id="org-chart" class="grid md:grid-cols-3 gap-4"></div>
+                </div>
+
+                <!-- Formulario Registrar Equipo -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-900">Registrar Nuevo Equipo en la Red</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Ingrese los datos del dispositivo a añadir a la LAN</p>
+                    </div>
+                    <form id="form-equipos" class="p-6 grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Equipo *</label>
+                            <input type="text" name="Nombre" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Ej: PC-VENTAS-03" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección IP *</label>
+                            <input type="text" name="IP" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Ej: 192.168.1.55" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Dirección MAC *</label>
+                            <input type="text" name="MAC" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Ej: AA:BB:CC:DD:EE:FF" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Dispositivo</label>
+                            <select name="Tipo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition">
+                                <option value="Workstation">Workstation</option>
+                                <option value="Servidor">Servidor</option>
+                                <option value="Dispositivo de Red">Dispositivo de Red</option>
+                                <option value="Impresora">Impresora</option>
+                                <option value="Cámara IP">Cámara IP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sistema Operativo</label>
+                            <input type="text" name="Sistema_Operativo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Windows 11, Ubuntu 22.04...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                            <input type="text" name="Departamento" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Ej: Recursos Humanos">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+                            <input type="text" name="Responsable" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Nombre del responsable">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <select name="Estado" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                                <option value="En_Falla">En Falla</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <textarea name="Descripcion" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Notas adicionales sobre el equipo..."></textarea>
+                        </div>
+                        <div class="md:col-span-2 flex justify-end gap-3 pt-2 border-t border-gray-100">
+                            <button type="reset" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition">
+                                Limpiar
+                            </button>
+                            <button type="submit" class="px-5 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                                <i class="fas fa-save"></i> Registrar Equipo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ======= TAB 4: TRANSMISIONES ======= -->
+            <div id="tab-transmisiones" class="tab-section hidden flex-col gap-6">
+                <!-- Resumen tráfico -->
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="stat-card fade-in-up bg-gradient-to-br from-blue-50 to-white">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Total Transmisiones</p>
+                        <p class="text-3xl font-bold text-primary" id="stat-trans-total">0</p>
+                        <p class="text-xs text-gray-400 mt-1">registros de tráfico</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:50ms">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Protocolo más usado</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-prot">TCP</p>
+                        <p class="text-xs text-gray-400 mt-1">mayor volumen de tráfico</p>
+                    </div>
+                    <div class="stat-card fade-in-up" style="animation-delay:100ms bg-gradient-to-br from-green-50 to-white">
+                        <p class="text-sm text-gray-500 font-medium mb-2">Bytes Totales TX</p>
+                        <p class="text-3xl font-bold text-accent" id="stat-bytes">0 KB</p>
+                        <p class="text-xs text-gray-400 mt-1">tráfico de salida total</p>
+                    </div>
+                </div>
+
+                <!-- Log de transmisiones -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Log de Transmisiones de Red</h3>
+                            <p class="text-xs text-gray-500 mt-0.5">Tráfico registrado entre los equipos de la LAN</p>
+                        </div>
+                        <button id="btn-nueva-trans" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Registrar Transmisión
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Equipo Origen</th>
+                                    <th>IP Destino</th>
+                                    <th>Puerto</th>
+                                    <th>Protocolo</th>
+                                    <th>Bytes TX</th>
+                                    <th>Bytes RX</th>
+                                    <th>Fecha</th>
+                                    <th class="text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-transmisiones"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Formulario nueva transmisión -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="font-semibold text-gray-900">Registrar Transmisión Manual</h3>
+                    </div>
+                    <form id="form-transmisiones" class="p-6 grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ID Equipo Origen *</label>
+                            <input type="number" name="ID_Equipo_Origen" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="ID del equipo" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">IP Destino *</label>
+                            <input type="text" name="IP_Destino" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Ej: 8.8.8.8" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Puerto</label>
+                            <input type="number" name="Puerto" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="Ej: 443">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Protocolo</label>
+                            <select name="Protocolo" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition">
+                                <option value="TCP">TCP</option>
+                                <option value="UDP">UDP</option>
+                                <option value="ICMP">ICMP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bytes Enviados</label>
+                            <input type="number" name="Bytes_Enviados" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Bytes Recibidos</label>
+                            <input type="number" name="Bytes_Recibidos" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent transition" placeholder="0">
+                        </div>
+                        <div class="md:col-span-3 flex justify-end gap-3 pt-2 border-t border-gray-100">
+                            <button type="reset" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition">Limpiar</button>
+                            <button type="submit" class="px-5 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                                <i class="fas fa-save"></i> Registrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- MODAL EDITAR EQUIPO -->
+<div id="modal-equipo" class="modal-overlay hidden">
+    <div class="modal-box">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Editar Equipo</h3>
+            <button id="modal-close" class="text-gray-400 hover:text-gray-700 transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="form-editar-equipo" class="grid md:grid-cols-2 gap-4">
+            <input type="hidden" id="edit-id">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input type="text" id="edit-nombre" name="Nombre" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary transition">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">IP</label>
+                <input type="text" id="edit-ip" name="IP" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary transition">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
+                <input type="text" id="edit-depto" name="Departamento" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary transition">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select id="edit-estado" name="Estado" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary transition">
+                    <option value="Activo">Activo</option>
+                    <option value="Inactivo">Inactivo</option>
+                    <option value="En_Falla">En Falla</option>
+                </select>
+            </div>
+            <div class="md:col-span-2 flex justify-end gap-3 pt-2 border-t border-gray-100">
+                <button type="button" id="modal-cancel" class="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50 transition">Cancelar</button>
+                <button type="submit" class="px-5 py-2 bg-primary text-white text-sm rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- =========================== SCRIPT =========================== -->
+<script type="module">
+import { NetworkService } from '../js/NetworkService.js';
+import { RenderTabla }    from '../js/RenderTabla.js';
+import { TabManager }     from '../js/TabManager.js';
+
+const API_URL = 'http://localhost/monitoreo_red/api/network_manager.php';
+const api     = new NetworkService(API_URL);
+
+// Reloj en tiempo real
+function iniciarReloj() {
+    const reloj = document.getElementById('reloj');
+    setInterval(() => {
+        reloj.textContent = new Date().toLocaleTimeString('es-VE', { hour12: false });
+    }, 1000);
+}
+
+// Formatear bytes
+function fmtBytes(b) {
+    if (!b || b === 0) return '0 B';
+    const k = 1024, sizes = ['B','KB','MB','GB'];
+    const i = Math.floor(Math.log(b) / Math.log(k));
+    return (b / Math.pow(k, i)).toFixed(1) + ' ' + sizes[i];
+}
+
+// Badges de estado
+const estadoBadge = {
+    'Activo':    'badge-activo',
+    'Inactivo':  'badge-inactivo',
+    'En_Falla':  'badge-falla'
+};
+
+// Instancia de TabManager (igual que inventarioSH)
+new TabManager();
+
+// ---- Sidebar navigation ----
+document.querySelectorAll('.sidebar-link[data-target]').forEach(link => {
+    link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = link.dataset.target;
+        document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            if (btn.dataset.target === target) btn.click();
+        });
+    });
+});
+
+// ============================================================
+// TABLA EQUIPOS
+// ============================================================
+const tablaEquipos = new RenderTabla('tbody-equipos', {
+    idField: 'ID_Equipo',
+    columns: [
+        { field: 'Nombre',           className: 'font-medium text-gray-900' },
+        { field: 'IP',               className: 'font-mono text-indigo-600' },
+        { field: 'MAC',              className: 'font-mono text-gray-500 text-xs' },
+        { field: 'Tipo' },
+        { field: 'Sistema_Operativo' },
+        { field: 'Departamento' },
+        { field: 'Estado',           badge: estadoBadge }
+    ],
+    onEdit:   id => abrirModalEditar(id),
+    onDelete: id => eliminarEquipo(id)
+});
+
+async function cargarEquipos() {
+    const datos = await api.getAll('equipos');
+    tablaEquipos.render(datos);
+
+    // Estadísticas
+    document.getElementById('stat-total').textContent    = datos.length;
+    document.getElementById('stat-activos').textContent  = datos.filter(e => e.Estado === 'Activo').length;
+    document.getElementById('stat-inactivos').textContent = datos.filter(e => e.Estado === 'Inactivo').length;
+    document.getElementById('stat-fallas').textContent   = datos.filter(e => e.Estado === 'En_Falla').length;
+
+    // Gráfico por tipo
+    const tipos = datos.reduce((acc, e) => { acc[e.Tipo] = (acc[e.Tipo] || 0) + 1; return acc; }, {});
+    const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-red-500'];
+    const chartEl = document.getElementById('chart-tipos');
+    chartEl.innerHTML = Object.entries(tipos).map(([tipo, count], i) => {
+        const pct = Math.round((count / datos.length) * 100);
+        return `
+            <div class="space-y-1">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">${tipo}</span>
+                    <span class="font-semibold text-gray-900">${count} (${pct}%)</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2">
+                    <div class="${colors[i % colors.length]} h-2 rounded-full transition-all" style="width:${pct}%"></div>
+                </div>
+            </div>`;
+    }).join('');
+
+    // Organización por departamento
+    const deptos = datos.reduce((acc, e) => {
+        const d = e.Departamento || 'Sin Departamento';
+        if (!acc[d]) acc[d] = [];
+        acc[d].push(e);
+        return acc;
+    }, {});
+    const orgEl = document.getElementById('org-chart');
+    orgEl.innerHTML = Object.entries(deptos).map(([depto, equipos]) => `
+        <div class="border border-gray-200 rounded-xl p-4 hover:shadow-md transition">
+            <div class="flex items-center gap-2 mb-3">
+                <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <i class="fas fa-building text-white text-xs"></i>
+                </div>
+                <div>
+                    <p class="font-semibold text-gray-900 text-sm">${depto}</p>
+                    <p class="text-xs text-gray-500">${equipos.length} equipo(s)</p>
+                </div>
+            </div>
+            <ul class="space-y-1">
+                ${equipos.map(eq => `
+                    <li class="flex items-center gap-2 text-xs text-gray-600">
+                        <span class="w-2 h-2 rounded-full ${eq.Estado === 'Activo' ? 'bg-green-400' : eq.Estado === 'En_Falla' ? 'bg-red-400' : 'bg-gray-300'}"></span>
+                        ${eq.Nombre} <span class="text-gray-400 font-mono">${eq.IP}</span>
+                    </li>`).join('')}
+            </ul>
+        </div>
+    `).join('');
+}
+
+async function eliminarEquipo(id) {
+    if (!confirm(`¿Eliminar el equipo #${id} de la red?`)) return;
+    await api.delete('equipos', id);
+    cargarEquipos();
+}
+
+// Modal Editar
+async function abrirModalEditar(id) {
+    const equipo = await api.getById('equipos', id);
+    document.getElementById('edit-id').value        = equipo.ID_Equipo;
+    document.getElementById('edit-nombre').value    = equipo.Nombre;
+    document.getElementById('edit-ip').value        = equipo.IP;
+    document.getElementById('edit-depto').value     = equipo.Departamento || '';
+    document.getElementById('edit-estado').value    = equipo.Estado;
+    document.getElementById('modal-equipo').classList.remove('hidden');
+}
+
+document.getElementById('modal-close').addEventListener('click',  () => document.getElementById('modal-equipo').classList.add('hidden'));
+document.getElementById('modal-cancel').addEventListener('click', () => document.getElementById('modal-equipo').classList.add('hidden'));
+
+document.getElementById('form-editar-equipo').addEventListener('submit', async e => {
+    e.preventDefault();
+    const id   = document.getElementById('edit-id').value;
+    const data = Object.fromEntries(new FormData(e.target));
+    await api.update('equipos', id, data);
+    document.getElementById('modal-equipo').classList.add('hidden');
+    cargarEquipos();
+});
+
+// Form alta equipos
+document.getElementById('form-equipos').addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    await api.create('equipos', data);
+    alert('Equipo registrado correctamente.');
+    e.target.reset();
+    cargarEquipos();
+    document.querySelector('[data-target="tab-equipos"]').click();
+});
+
+// ============================================================
+// TABLA CATEGORÍAS
+// ============================================================
+const tablaCategorias = new RenderTabla('tbody-categorias', {
+    idField: 'ID_Categoria',
+    columns: [
+        { field: 'Nombre',      className: 'font-medium text-gray-900' },
+        { field: 'Descripcion', className: 'text-gray-500' }
+    ],
+    onDelete: async id => { if (confirm(`¿Eliminar categoría #${id}?`)) { await api.delete('categorias_equipo', id); cargarCategorias(); } }
+});
+
+async function cargarCategorias() {
+    const datos = await api.getAll('categorias_equipo');
+    tablaCategorias.render(datos);
+}
+
+// ============================================================
+// TABLA TRANSMISIONES
+// ============================================================
+const tablaTransmisiones = new RenderTabla('tbody-transmisiones', {
+    idField: 'ID_Transmision',
+    columns: [
+        { field: 'ID_Equipo_Origen', className: 'font-mono text-xs' },
+        { field: 'IP_Destino',       className: 'font-mono text-indigo-600' },
+        { field: 'Puerto',           className: 'font-mono' },
+        { field: 'Protocolo' },
+        { field: 'Bytes_Enviados',   className: 'font-mono text-xs' },
+        { field: 'Bytes_Recibidos',  className: 'font-mono text-xs' },
+        { field: 'Fecha',            className: 'text-xs text-gray-400' }
+    ],
+    onDelete: async id => { if (confirm(`¿Eliminar transmisión #${id}?`)) { await api.delete('transmisiones', id); cargarTransmisiones(); } }
+});
+
+async function cargarTransmisiones() {
+    const datos = await api.getAll('transmisiones');
+    tablaTransmisiones.render(datos);
+    document.getElementById('stat-trans-total').textContent = datos.length;
+    const totalBytes = datos.reduce((s, t) => s + (parseInt(t.Bytes_Enviados) || 0), 0);
+    document.getElementById('stat-bytes').textContent = fmtBytes(totalBytes);
+}
+
+document.getElementById('form-transmisiones').addEventListener('submit', async e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    await api.create('transmisiones', data);
+    alert('Transmisión registrada correctamente.');
+    e.target.reset();
+    cargarTransmisiones();
+});
+
+// ============================================================
+// INICIALIZACIÓN
+// ============================================================
+document.addEventListener('DOMContentLoaded', async () => {
+    iniciarReloj();
+    try {
+        await cargarEquipos();
+        await cargarCategorias();
+        await cargarTransmisiones();
+    } catch (err) {
+        console.error('Error al inicializar Módulo 1:', err);
+    }
+});
+</script>
+
+</body>
+</html>
