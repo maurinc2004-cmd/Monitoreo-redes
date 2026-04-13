@@ -1,25 +1,15 @@
 <?php
-// Configuración de la base de datos basada en MainQuery.sql
-$host = "localhost";
-$db_name = "inventario_tecnologia";
-$username = "root";
-$password = ""; // Cambia esto si tienes contraseña en tu servidor local
-$charset = "utf8mb4";
+// ============================================================
+// Configuración de la Base de Datos - Sistema de Monitoreo LAN
+// Basado en la arquitectura del proyecto inventarioSH
+// ============================================================
 
-$db_inventario = [
-    "host" => "localhost",
-    "db_name" => "inventario_tecnologia",
+$db_config = [
+    "host"     => "localhost",
+    "db_name"  => "monitoreo_red_lan",
     "username" => "root",
-    "password" => "",
-    "charset" => "utf8mb4"
-];
-
-$db_intranet = [
-    "host" => "localhost",
-    "db_name" => "intranetdb",
-    "username" => "root",
-    "password" => "",
-    "charset" => "utf8mb4"
+    "password" => "", // Cambia si tienes contraseña
+    "charset"  => "utf8mb4"
 ];
 
 $options = [
@@ -29,14 +19,10 @@ $options = [
 ];
 
 try {
-    // Conexión 1: Inventario
-    $dsn_inv = "mysql:host={$db_inventario['host']};dbname={$db_inventario['db_name']};charset={$db_inventario['charset']}";
-    $pdo = new PDO($dsn_inv, $db_inventario['username'], $db_inventario['password'], $options);
-
-    // Conexión 2: Intranet
-    $dsn_int = "mysql:host={$db_intranet['host']};dbname={$db_intranet['db_name']};charset={$db_intranet['charset']}";
-    $pdo_int = new PDO($dsn_int, $db_intranet['username'], $db_intranet['password'], $options);
-    // Conexión exitosa
+    $dsn = "mysql:host={$db_config['host']};dbname={$db_config['db_name']};charset={$db_config['charset']}";
+    $pdo = new PDO($dsn, $db_config['username'], $db_config['password'], $options);
 } catch (\PDOException $e) {
-    throw new \PDOException($e->getMessage(), (int)$e->getCode());
+    http_response_code(503);
+    echo json_encode(["error" => "Error de conexión a la base de datos: " . $e->getMessage()]);
+    exit;
 }
